@@ -12,6 +12,9 @@
 - `GET /api/guest/hotels/{hotel}/guide` — гайд/путеводитель.
 - `GET /api/guest/hotels/{hotel}/news` — новости локации.
 - `POST /api/guest/hotels/{hotel}/orders` — оформление заказа.
+- `POST /api/guest/reviews` — оставить отзыв (auth: Sanctum, 1–5, анонимность, связь с заказом/услугой/сотрудником).
+- `GET /api/guest/reviews/my` — мои отзывы по выполненным заказам (auth).
+- `GET /api/guest/services/{service}/reviews` — список отзывов по конкретной услуге.
 
 ### Установочный мастер (`/api/install`)
 - `GET /api/install/status` — проверка системных требований и наличия `.env`.
@@ -28,10 +31,14 @@
 - Новости: `GET/POST/PUT` `/api/admin/hotels/{hotel}/news` и `/api/admin/news/{news}`.
 - Роли/права: `GET/POST /api/admin/roles`, `PUT /api/admin/roles/{role}/permissions`, `PATCH /api/admin/users/{user}/role`.
 - Загрузка файлов: `POST /api/admin/uploads`.
+- Отзывы: `GET /api/admin/reviews` (фильтры по дате/отелю/услуге/сотруднику/оценке/статусу), `GET /api/admin/reviews/{review}` (детали), `POST /api/admin/reviews/{review}/status` (смена статуса), `POST /api/admin/reviews/{review}/reply` (ответ администратора).
+- Рейтинг: `GET /api/admin/reviews/ratings/services` (рейтинг услуг), `GET /api/admin/reviews/ratings/staff` (рейтинг сотрудников), `GET /api/admin/reviews/analytics/overview` (агрегаты и распределение по оценкам).
 
 ### Персонал (`/api/staff`, роль `staff`)
 - `GET /api/staff/requests` — входящие заявки.
 - `PATCH /api/staff/requests/{order}` — изменение статуса заявки.
+- `GET /api/staff/reviews/my` — отзывы, привязанные к текущему сотруднику.
+- `GET /api/staff/reviews/stats` — сводка рейтинга сотрудника.
 
 ### Сетевой админ (`/api/network`, роль `network-admin`)
 - `GET/PUT /api/network/hotels` и `/api/network/hotels/{hotel}` — управление отелями.
@@ -53,6 +60,7 @@
 - Обновления: `update_packages`, `update_jobs`, `update_logs`.
 - Аудит и флаги: `audit_logs`, `feature_flags`.
 - Дополнительные связи: текстовая ER-диаграмма описывает отношения Organization ↔ Department ↔ Host, User ↔ Role/Permission, Appointment ↔ VisitPass/Visitor, UpdatePackage ↔ UpdateJob/UpdateLog и т.д.
+- Отзывы и рейтинг: `reviews` (hotel_id, room_id, order_id, service_id, staff_id, rating 1–5, comment, is_anonymous, status, reviewed_at, admin_reply, timestamps; индексы по hotel_id/service_id/staff_id/order_id/rating/created_at).
 
 ## Update Manager
 - Реализован как доменный компонент Laravel с фоновыми заданиями; хранение в таблицах `update_packages`, `update_jobs`, `update_logs`.
