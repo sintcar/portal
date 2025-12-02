@@ -6,6 +6,7 @@ use App\Http\Controllers\API\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\API\Admin\RoleController;
 use App\Http\Controllers\API\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\API\Common\OrderController;
+use App\Http\Controllers\API\InstallController;
 use App\Http\Controllers\API\Developer\DeveloperConsoleController;
 use App\Http\Controllers\API\Guest\GuestController;
 use App\Http\Controllers\API\Network\NetworkAdminController;
@@ -23,6 +24,16 @@ Route::prefix('guest')->group(function () {
     Route::get('hotels/{hotel}/guide', [GuestController::class, 'guide']);
     Route::get('hotels/{hotel}/news', [GuestController::class, 'news']);
     Route::post('hotels/{hotel}/orders', [OrderController::class, 'store']);
+});
+
+Route::prefix('install')->group(function () {
+    Route::get('status', [InstallController::class, 'status']);
+    Route::post('env', [InstallController::class, 'createEnv']);
+    Route::post('database', [InstallController::class, 'configureDatabase']);
+    Route::post('migrate', [InstallController::class, 'runMigrations']);
+    Route::post('key', [InstallController::class, 'generateKey']);
+    Route::post('admin', [InstallController::class, 'createAdmin']);
+    Route::post('seed', [InstallController::class, 'runSeeder']);
 });
 
 Route::prefix('admin')

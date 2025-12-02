@@ -1,0 +1,9 @@
+/node_modules
+/backend/vendor
+/frontend/node_modules
+/backend/.env
+/.env
+/vendor
+/.idea
+/.vscode
+/storage
