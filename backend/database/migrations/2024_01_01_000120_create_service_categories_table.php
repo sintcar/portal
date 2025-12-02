@@ -8,13 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('restaurants', function (Blueprint $table) {
+        Schema::create('service_categories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hotel_id')->constrained()->cascadeOnDelete();
             $table->string('name');
+            $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->json('opening_hours')->nullable();
-            $table->boolean('is_active')->default(true);
+            $table->unsignedInteger('display_order')->default(0);
             $table->timestamps();
 
             $table->unique(['hotel_id', 'name']);
@@ -23,6 +23,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('restaurants');
+        Schema::dropIfExists('service_categories');
     }
 };
