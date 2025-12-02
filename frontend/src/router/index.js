@@ -10,6 +10,7 @@ import GuideView from '../views/GuideView.vue';
 import NewsView from '../views/NewsView.vue';
 import ChatView from '../views/ChatView.vue';
 import LoginView from '../views/LoginView.vue';
+import MyReviewsView from '../views/MyReviewsView.vue';
 import AdminDashboard from '../views/admin/AdminDashboard.vue';
 import AdminServices from '../views/admin/AdminServices.vue';
 import AdminRequests from '../views/admin/AdminRequests.vue';
@@ -22,6 +23,10 @@ import AdminPromotions from '../views/admin/AdminPromotions.vue';
 import AdminNews from '../views/admin/AdminNews.vue';
 import AdminSettings from '../views/admin/AdminSettings.vue';
 import AdminUsers from '../views/admin/AdminUsers.vue';
+import AdminReviews from '../views/admin/AdminReviews.vue';
+import AdminServiceRatings from '../views/admin/AdminServiceRatings.vue';
+import AdminStaffRatings from '../views/admin/AdminStaffRatings.vue';
+import AdminReviewAnalytics from '../views/admin/AdminReviewAnalytics.vue';
 import InstallView from '../views/InstallView.vue';
 
 const router = createRouter({
@@ -38,6 +43,7 @@ const router = createRouter({
     { path: '/news', name: 'news', component: NewsView },
     { path: '/chat', name: 'chat', component: ChatView },
     { path: '/login', name: 'login', component: LoginView },
+    { path: '/reviews', name: 'reviews', component: MyReviewsView },
     { path: '/install', name: 'install', component: InstallView },
     { path: '/admin', redirect: '/admin/dashboard' },
     { path: '/admin/dashboard', name: 'admin-dashboard', component: AdminDashboard, meta: { layout: 'admin' } },
@@ -51,7 +57,11 @@ const router = createRouter({
     { path: '/admin/promotions', name: 'admin-promotions', component: AdminPromotions, meta: { layout: 'admin' } },
     { path: '/admin/news', name: 'admin-news', component: AdminNews, meta: { layout: 'admin' } },
     { path: '/admin/settings', name: 'admin-settings', component: AdminSettings, meta: { layout: 'admin' } },
-    { path: '/admin/users', name: 'admin-users', component: AdminUsers, meta: { layout: 'admin' } }
+    { path: '/admin/users', name: 'admin-users', component: AdminUsers, meta: { layout: 'admin' } },
+    { path: '/admin/reviews', name: 'admin-reviews', component: AdminReviews, meta: { layout: 'admin' } },
+    { path: '/admin/reviews/services', name: 'admin-service-ratings', component: AdminServiceRatings, meta: { layout: 'admin' } },
+    { path: '/admin/reviews/staff', name: 'admin-staff-ratings', component: AdminStaffRatings, meta: { layout: 'admin' } },
+    { path: '/admin/reviews/analytics', name: 'admin-review-analytics', component: AdminReviewAnalytics, meta: { layout: 'admin' } }
   ]
 });
 
