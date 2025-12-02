@@ -5,34 +5,37 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
-class Restaurant extends Model
+class Module extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'hotel_id',
         'name',
+        'slug',
         'description',
-        'opening_hours',
         'is_active',
     ];
 
     protected $casts = [
-        'opening_hours' => 'array',
         'is_active' => 'bool',
     ];
 
-    public function hotel(): BelongsTo
+    public function versions(): HasMany
     {
-        return $this->belongsTo(Hotel::class);
+        return $this->hasMany(ModuleVersion::class);
     }
 
-    public function menuItems(): HasMany
+    public function licenses(): HasMany
     {
-        return $this->hasMany(RestaurantMenuItem::class, 'restaurant_id');
+        return $this->hasMany(License::class);
+    }
+
+    public function updateLogs(): HasManyThrough
+    {
+        return $this->hasManyThrough(UpdateLog::class, ModuleVersion::class);
     }
 
     public function scopeActive(Builder $query): Builder
