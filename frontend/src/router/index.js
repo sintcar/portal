@@ -22,6 +22,7 @@ import AdminPromotions from '../views/admin/AdminPromotions.vue';
 import AdminNews from '../views/admin/AdminNews.vue';
 import AdminSettings from '../views/admin/AdminSettings.vue';
 import AdminUsers from '../views/admin/AdminUsers.vue';
+import InstallView from '../views/InstallView.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -37,6 +38,7 @@ const router = createRouter({
     { path: '/news', name: 'news', component: NewsView },
     { path: '/chat', name: 'chat', component: ChatView },
     { path: '/login', name: 'login', component: LoginView },
+    { path: '/install', name: 'install', component: InstallView },
     { path: '/admin', redirect: '/admin/dashboard' },
     { path: '/admin/dashboard', name: 'admin-dashboard', component: AdminDashboard, meta: { layout: 'admin' } },
     { path: '/admin/services', name: 'admin-services', component: AdminServices, meta: { layout: 'admin' } },
