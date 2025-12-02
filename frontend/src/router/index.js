@@ -10,6 +10,18 @@ import GuideView from '../views/GuideView.vue';
 import NewsView from '../views/NewsView.vue';
 import ChatView from '../views/ChatView.vue';
 import LoginView from '../views/LoginView.vue';
+import AdminDashboard from '../views/admin/AdminDashboard.vue';
+import AdminServices from '../views/admin/AdminServices.vue';
+import AdminRequests from '../views/admin/AdminRequests.vue';
+import AdminRooms from '../views/admin/AdminRooms.vue';
+import AdminRestaurant from '../views/admin/AdminRestaurant.vue';
+import AdminSpa from '../views/admin/AdminSpa.vue';
+import AdminMap from '../views/admin/AdminMap.vue';
+import AdminGuide from '../views/admin/AdminGuide.vue';
+import AdminPromotions from '../views/admin/AdminPromotions.vue';
+import AdminNews from '../views/admin/AdminNews.vue';
+import AdminSettings from '../views/admin/AdminSettings.vue';
+import AdminUsers from '../views/admin/AdminUsers.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -24,7 +36,20 @@ const router = createRouter({
     { path: '/guide', name: 'guide', component: GuideView },
     { path: '/news', name: 'news', component: NewsView },
     { path: '/chat', name: 'chat', component: ChatView },
-    { path: '/login', name: 'login', component: LoginView }
+    { path: '/login', name: 'login', component: LoginView },
+    { path: '/admin', redirect: '/admin/dashboard' },
+    { path: '/admin/dashboard', name: 'admin-dashboard', component: AdminDashboard, meta: { layout: 'admin' } },
+    { path: '/admin/services', name: 'admin-services', component: AdminServices, meta: { layout: 'admin' } },
+    { path: '/admin/requests', name: 'admin-requests', component: AdminRequests, meta: { layout: 'admin' } },
+    { path: '/admin/rooms', name: 'admin-rooms', component: AdminRooms, meta: { layout: 'admin' } },
+    { path: '/admin/restaurant', name: 'admin-restaurant', component: AdminRestaurant, meta: { layout: 'admin' } },
+    { path: '/admin/spa', name: 'admin-spa', component: AdminSpa, meta: { layout: 'admin' } },
+    { path: '/admin/map', name: 'admin-map', component: AdminMap, meta: { layout: 'admin' } },
+    { path: '/admin/guide', name: 'admin-guide', component: AdminGuide, meta: { layout: 'admin' } },
+    { path: '/admin/promotions', name: 'admin-promotions', component: AdminPromotions, meta: { layout: 'admin' } },
+    { path: '/admin/news', name: 'admin-news', component: AdminNews, meta: { layout: 'admin' } },
+    { path: '/admin/settings', name: 'admin-settings', component: AdminSettings, meta: { layout: 'admin' } },
+    { path: '/admin/users', name: 'admin-users', component: AdminUsers, meta: { layout: 'admin' } }
   ]
 });
 
