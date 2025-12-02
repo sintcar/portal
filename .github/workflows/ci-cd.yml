@@ -1,0 +1,280 @@
+name: CI/CD
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ":memory:"
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, bcmath, pdo_sqlite
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: |
+            composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Prepare environment
+        run: |
+          php -r "file_exists('.env') || copy('.env.example', '.env');"
+          php artisan key:generate --force
+
+      - name: Run feature and unit tests
+        run: php artisan test --without-tty
+
+  frontend-build:
+    name: Build frontend
+    runs-on: ubuntu-latest
+    needs: tests
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          if-no-files-found: error
+
+  backend-build:
+    name: Build backend
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, bcmath, pdo_sqlite
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-prod-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: |
+            composer-prod-
+
+      - name: Install production dependencies
+        working-directory: backend
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Build Laravel caches
+        working-directory: backend
+        env:
+          APP_ENV: production
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+        run: |
+          php -r "file_exists('.env') || copy('.env.example', '.env');"
+          php artisan key:generate --force
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          php artisan event:cache
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build
+          path: backend
+
+  release-package:
+    name: Package release
+    runs-on: ubuntu-latest
+    needs: [frontend-build, backend-build]
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download backend build
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-build
+          path: artifacts/backend
+
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: artifacts/frontend
+
+      - name: Assemble release directory
+        run: |
+          mkdir -p release/backend release/frontend
+          cp -R artifacts/backend/backend/. release/backend/
+          cp -R artifacts/frontend/frontend/dist release/frontend/dist
+          cp deploy.sh update.sh rollback.sh release/
+
+      - name: Create release archive
+        run: |
+          tar -czf portal-release.tar.gz -C release .
+          sha256sum portal-release.tar.gz > portal-release.sha256
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: portal-release
+          path: |
+            portal-release.tar.gz
+            portal-release.sha256
+
+  publish-developer-console:
+    name: Publish to Developer Console
+    runs-on: ubuntu-latest
+    needs: release-package
+    if: needs.release-package.result == 'success'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download packaged release
+        uses: actions/download-artifact@v4
+        with:
+          name: portal-release
+          path: artifacts
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: developer-console/package-lock.json
+
+      - name: Install Developer Console dependencies
+        working-directory: developer-console
+        run: npm ci
+
+      - name: Publish release metadata
+        env:
+          DEVCONSOLE_API_URL: ${{ secrets.DEVCONSOLE_API_URL }}
+          DEVCONSOLE_API_TOKEN: ${{ secrets.DEVCONSOLE_API_TOKEN }}
+          RELEASE_CHANNEL: ${{ vars.RELEASE_CHANNEL }}
+        run: |
+          if [ -z "$DEVCONSOLE_API_URL" ] || [ -z "$DEVCONSOLE_API_TOKEN" ]; then
+            echo "Developer console credentials not configured; skipping publish." \
+              "Set DEVCONSOLE_API_URL and DEVCONSOLE_API_TOKEN secrets to enable publishing." >&2
+            exit 0
+          fi
+
+          CHANNEL="${RELEASE_CHANNEL:-stable}"
+          RELEASE_VERSION="${GITHUB_REF_NAME:-${GITHUB_REF##*/}}"
+          RELEASE_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/download/${RELEASE_VERSION}/portal-release.tar.gz"
+          RELEASE_NOTES="Automated release for ${RELEASE_VERSION}"
+          CHECKSUM=$(cut -d' ' -f1 artifacts/portal-release.sha256)
+
+          cat <<'JSON' > request.json
+          {
+            "version": "__VERSION__",
+            "channel": "__CHANNEL__",
+            "url": "__URL__",
+            "checksum": "__CHECKSUM__",
+            "notes": "__NOTES__",
+            "isLatest": true
+          }
+JSON
+
+          sed -i "s/__VERSION__/${RELEASE_VERSION}/g" request.json
+          sed -i "s/__CHANNEL__/${CHANNEL}/g" request.json
+          sed -i "s~__URL__~${RELEASE_URL}~g" request.json
+          sed -i "s/__CHECKSUM__/${CHECKSUM}/g" request.json
+          sed -i "s/__NOTES__/${RELEASE_NOTES}/g" request.json
+
+          curl -sSf -X POST "$DEVCONSOLE_API_URL/releases" \
+            -H "Authorization: Bearer $DEVCONSOLE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d @request.json
+
+      - name: Upload publish logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-logs
+          path: request.json
+
+  telegram-notify:
+    name: Telegram notifications
+    runs-on: ubuntu-latest
+    needs:
+      - tests
+      - frontend-build
+      - backend-build
+      - release-package
+      - publish-developer-console
+    if: always()
+    steps:
+      - name: Send Telegram message
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram credentials not configured; skipping notification." >&2
+            exit 0
+          fi
+
+          summarize_job() {
+            local name="$1"; shift
+            local status="$1"
+            printf "- %s: %s\n" "$name" "$status"
+          }
+
+          STATUS_REPORT="Workflow: ${{ github.workflow }}\nRef: ${{ github.ref }}\n"
+          STATUS_REPORT+=$(summarize_job "Tests" "${{ needs.tests.result }}")
+          STATUS_REPORT+=$(summarize_job "Frontend build" "${{ needs.frontend-build.result }}")
+          STATUS_REPORT+=$(summarize_job "Backend build" "${{ needs.backend-build.result }}")
+          STATUS_REPORT+=$(summarize_job "Release package" "${{ needs.release-package.result || 'skipped' }}")
+          STATUS_REPORT+=$(summarize_job "Developer Console" "${{ needs.publish-developer-console.result || 'skipped' }}")
+
+          curl -s -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="${STATUS_REPORT}" \
+            -d parse_mode="Markdown"
