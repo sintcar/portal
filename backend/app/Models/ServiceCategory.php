@@ -8,21 +8,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Restaurant extends Model
+class ServiceCategory extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'hotel_id',
         'name',
+        'slug',
         'description',
-        'opening_hours',
-        'is_active',
+        'display_order',
     ];
 
     protected $casts = [
-        'opening_hours' => 'array',
-        'is_active' => 'bool',
+        'display_order' => 'int',
     ];
 
     public function hotel(): BelongsTo
@@ -30,13 +29,13 @@ class Restaurant extends Model
         return $this->belongsTo(Hotel::class);
     }
 
-    public function menuItems(): HasMany
+    public function services(): HasMany
     {
-        return $this->hasMany(RestaurantMenuItem::class, 'restaurant_id');
+        return $this->hasMany(Service::class);
     }
 
-    public function scopeActive(Builder $query): Builder
+    public function scopeOrdered(Builder $query): Builder
     {
-        return $query->where('is_active', true);
+        return $query->orderBy('display_order');
     }
 }
