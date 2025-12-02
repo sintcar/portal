@@ -1,15 +1,15 @@
 <template>
   <section class="stack">
     <header>
-      <h2>Карта</h2>
-      <p class="muted">Основные точки и сервисы на территории.</p>
+      <h2>Новости</h2>
+      <p class="muted">Все обновления отеля в одном месте.</p>
     </header>
-    <MapViewer :points="store.mapPoints" />
+    <NewsBlock :items="store.news" />
   </section>
 </template>
 
 <script setup>
-import MapViewer from '../components/MapViewer.vue';
+import NewsBlock from '../components/NewsBlock.vue';
 import { usePortalStore } from '../store';
 
 const store = usePortalStore();
