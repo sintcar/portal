@@ -9,8 +9,8 @@
 
 После клонирования с GitHub структура повторяет серверное расположение каталогов: служебные директории приложения создаются заранее и снабжены `.gitkeep`, а временные и окруженческие файлы исключены через `.gitignore`.
 
-## Развертывание на чистый сервер (пример test.v-altay.ru)
-Ниже — обновлённая пошаговая инструкция с конкретными командами для установки проекта в каталог `/var/www/www-root/data/www/test.v-altay.ru` и MySQL-базой `db3` (пароль `YraF2015`).
+## Развертывание на чистый сервер (пример s2.v-altay.ru)
+Ниже — подробная пошаговая инструкция с конкретными командами для установки проекта из репозитория `https://github.com/sintcar/portal` в каталог `/var/www/www-root/data/www/s2.v-altay.ru` и настройки MySQL-базы `db3` (пароль `YraF2015`). Все команды предполагают пользователя с sudo-доступом.
 
 1. **Установите системные зависимости**
    ```bash
@@ -23,10 +23,10 @@
 
 2. **Клонируйте проект в целевой путь**
    ```bash
-   sudo mkdir -p /var/www/www-root/data/www/test.v-altay.ru
-   sudo chown -R "$USER":"$USER" /var/www/www-root/data/www/test.v-altay.ru
-   git clone https://github.com/sintcar/portal.git /var/www/www-root/data/www/test.v-altay.ru
-   cd /var/www/www-root/data/www/test.v-altay.ru
+   sudo mkdir -p /var/www/www-root/data/www/s2.v-altay.ru
+   sudo chown -R "$USER":"$USER" /var/www/www-root/data/www/s2.v-altay.ru
+   git clone https://github.com/sintcar/portal.git /var/www/www-root/data/www/s2.v-altay.ru
+   cd /var/www/www-root/data/www/s2.v-altay.ru
    ```
 
 3. **Настройте переменные окружения backend (Laravel)**
@@ -73,6 +73,6 @@
    ```
 
 8. **Запустите и проверьте**
-   - Настройте веб-сервер (Nginx/Apache) так, чтобы корнем сайта был `/var/www/www-root/data/www/test.v-altay.ru/backend/public`.
-   - Статические файлы фронтенда доступны в `/var/www/www-root/data/www/test.v-altay.ru/frontend/dist`.
+   - Настройте веб-сервер (Nginx/Apache) так, чтобы корнем сайта был `/var/www/www-root/data/www/s2.v-altay.ru/backend/public`.
+   - Статические файлы фронтенда доступны в `/var/www/www-root/data/www/s2.v-altay.ru/frontend/dist`.
    - После настройки убедитесь, что API отвечает на `/api/install/status`.
