@@ -101,11 +101,27 @@ class InstallController extends Controller
 
     public function generateKey(): JsonResponse
     {
-        Artisan::call('key:generate', ['--force' => true]);
+        $envPath = $this->envPath();
+
+        if (! File::exists($envPath)) {
+            throw new HttpException(409, '.env file does not exist. Create it before generating APP_KEY.');
+        }
+
+        $key = 'base64:' . base64_encode(random_bytes(32));
+        $envContent = File::get($envPath);
+
+        if (preg_match('/^APP_KEY=.*/m', $envContent)) {
+            $envContent = preg_replace('/^APP_KEY=.*/m', 'APP_KEY=' . $key, $envContent);
+        } else {
+            $envContent .= PHP_EOL . 'APP_KEY=' . $key . PHP_EOL;
+        }
+
+        File::put($envPath, $envContent);
+        Config::set('app.key', $key);
 
         return response()->json([
             'status' => 'key_generated',
-            'app_key' => config('app.key'),
+            'app_key' => $key,
         ]);
     }
 
