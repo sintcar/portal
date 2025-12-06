@@ -29,10 +29,11 @@
    cd /var/www/www-root/data/www/s2.v-altay.ru
    ```
 
-3. **Настройте переменные окружения backend (Laravel)**
+3. **Настройте переменные окружения backend (Laravel) и установите зависимости**
    ```bash
    cd backend
    cp .env.example .env
+   composer install --no-dev --prefer-dist --optimize-autoloader
    php artisan key:generate
    ```
    Обновите параметры подключения к базе в `backend/.env`:
@@ -49,9 +50,8 @@
    sudo mysql -e "GRANT ALL PRIVILEGES ON db3.* TO 'db3'@'localhost'; FLUSH PRIVILEGES;"
    ```
 
-5. **Установите PHP-зависимости и выполните миграции**
+5. **Выполните миграции и соберите кеши**
    ```bash
-   composer install --no-dev --prefer-dist --optimize-autoloader
    php artisan migrate --force
    php artisan config:clear && php artisan config:cache
    php artisan route:cache
