@@ -76,3 +76,105 @@
    - Настройте веб-сервер (Nginx/Apache) так, чтобы корнем сайта был `/var/www/www-root/data/www/s2.v-altay.ru/backend/public`.
    - Статические файлы фронтенда доступны в `/var/www/www-root/data/www/s2.v-altay.ru/frontend/dist`.
    - После настройки убедитесь, что API отвечает на `/api/install/status`.
+
+## Пример конфигурации Nginx
+Ниже приведён исправленный вариант конфигурации с одинаковым корнем для HTTP/HTTPS, корректным порядком объявления `$root_path` и актуальными настройками TLS.
+
+```nginx
+set $root_path /var/www/www-root/data/www/s2.v-altay.ru/backend/public;
+
+server {
+    server_name s2.v-altay.ru www.s2.v-altay.ru;
+    listen 5.35.126.252:80;
+
+    charset off;
+    index index.php index.html;
+    root $root_path;
+    disable_symlinks if_not_owner from=$root_path;
+
+    include /etc/nginx/vhosts-includes/*.conf;
+    include /etc/nginx/vhosts-resources/s2.v-altay.ru/*.conf;
+
+    access_log /var/www/httpd-logs/s2.v-altay.ru.access.log;
+    error_log  /var/www/httpd-logs/s2.v-altay.ru.error.log notice;
+
+    ssi on;
+
+    gzip on;
+    gzip_comp_level 5;
+    gzip_disable "msie6";
+    gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript image/svg+xml;
+
+    location / {
+        location ~ [^/]\.ph(p\d*|tml)$ {
+            try_files /does_not_exists @php;
+        }
+
+        location ~* ^.+\.(jpg|jpeg|gif|png|svg|js|css|mp3|ogg|mpe?g|avi|zip|gz|bz2?|rar|swf|webp|woff|woff2)$ {
+            expires 24h;
+        }
+    }
+
+    location @php {
+        include /etc/nginx/vhosts-resources/s2.v-altay.ru/dynamic/*.conf;
+        fastcgi_index index.php;
+        fastcgi_param PHP_ADMIN_VALUE "sendmail_path = /usr/sbin/sendmail -t -i -f webmaster@s2.v-altay.ru";
+        fastcgi_pass unix:/var/www/php-fpm/2.sock;
+        fastcgi_split_path_info ^((?U).+\.ph(?:p\d*|tml))(/?.+)$;
+        try_files $uri =404;
+        include fastcgi_params;
+    }
+}
+
+server {
+    server_name s2.v-altay.ru www.s2.v-altay.ru;
+    listen 5.35.126.252:443 ssl;
+
+    ssl_certificate     "/var/www/httpd-cert/www-root/s2.v-altay.ru_le1.crtca"; # файл должен содержать полный chain
+    ssl_certificate_key "/var/www/httpd-cert/www-root/s2.v-altay.ru_le1.key";
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers 'EECDH+AESGCM:EECDH+CHACHA20:!aNULL:!MD5:!DSS';
+    ssl_prefer_server_ciphers on;
+    ssl_dhparam /etc/ssl/certs/dhparam4096.pem;
+
+    charset off;
+    index index.php index.html;
+    root $root_path;
+    disable_symlinks if_not_owner from=$root_path;
+
+    include /etc/nginx/vhosts-includes/*.conf;
+    include /etc/nginx/vhosts-resources/s2.v-altay.ru/*.conf;
+
+    access_log /var/www/httpd-logs/s2.v-altay.ru.access.log;
+    error_log  /var/www/httpd-logs/s2.v-altay.ru.error.log notice;
+
+    ssi on;
+
+    gzip on;
+    gzip_comp_level 5;
+    gzip_disable "msie6";
+    gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript image/svg+xml;
+
+    location / {
+        location ~ [^/]\.ph(p\d*|tml)$ {
+            try_files /does_not_exists @php;
+        }
+
+        location ~* ^.+\.(jpg|jpeg|gif|png|svg|js|css|mp3|ogg|mpe?g|avi|zip|gz|bz2?|rar|swf|webp|woff|woff2)$ {
+            expires 24h;
+        }
+    }
+
+    location @php {
+        include /etc/nginx/vhosts-resources/s2.v-altay.ru/dynamic/*.conf;
+        fastcgi_index index.php;
+        fastcgi_param PHP_ADMIN_VALUE "sendmail_path = /usr/sbin/sendmail -t -i -f webmaster@s2.v-altay.ru";
+        fastcgi_pass unix:/var/www/php-fpm/2.sock;
+        fastcgi_split_path_info ^((?U).+\.ph(?:p\d*|tml))(/?.+)$;
+        try_files $uri =404;
+        include fastcgi_params;
+    }
+}
+```
+
+Перед применением убедитесь, что файл сертификата содержит полную цепочку (fullchain), а путь к нему корректен.
