@@ -78,7 +78,7 @@
    - После настройки убедитесь, что API отвечает на `/api/install/status`.
 
 ## Пример конфигурации Nginx
-Ниже приведён исправленный вариант конфигурации с одинаковым корнем для HTTP/HTTPS, корректным порядком объявления `$root_path` и актуальными настройками TLS. Обратите внимание, что директиву `set` нужно размещать внутри блоков `server` — если файл подключается сразу в основную секцию `nginx.conf`, вынесение `set` в начало файла приведёт к ошибке `"set" directive is not allowed here`.
+Ниже приведён исправленный вариант конфигурации с одинаковым корнем для HTTP/HTTPS, корректным порядком объявления `$root_path` и актуальными настройками TLS. Обратите внимание, что директиву `set` нужно размещать внутри блоков `server` — если файл подключается сразу в основную секцию `nginx.conf`, вынесение `set` в начало файла приведёт к ошибке `"set" directive is not allowed here`. В примере учтены актуальные пути до сертификатов и сокета PHP-FPM (`10.sock`).
 
 ```nginx
 server {
@@ -118,7 +118,7 @@ server {
         include /etc/nginx/vhosts-resources/s2.v-altay.ru/dynamic/*.conf;
         fastcgi_index index.php;
         fastcgi_param PHP_ADMIN_VALUE "sendmail_path = /usr/sbin/sendmail -t -i -f webmaster@s2.v-altay.ru";
-        fastcgi_pass unix:/var/www/php-fpm/2.sock;
+        fastcgi_pass unix:/var/www/php-fpm/10.sock;
         fastcgi_split_path_info ^((?U).+\.ph(?:p\d*|tml))(/?.+)$;
         try_files $uri =404;
         include fastcgi_params;
@@ -130,8 +130,8 @@ server {
     server_name s2.v-altay.ru www.s2.v-altay.ru;
     listen 5.35.126.252:443 ssl;
 
-    ssl_certificate     "/var/www/httpd-cert/www-root/s2.v-altay.ru_le1.crtca"; # файл должен содержать полный chain
-    ssl_certificate_key "/var/www/httpd-cert/www-root/s2.v-altay.ru_le1.key";
+    ssl_certificate     "/var/www/httpd-cert/www-root/s2.v-altay.ru_le2.crtca"; # файл должен содержать полный chain
+    ssl_certificate_key "/var/www/httpd-cert/www-root/s2.v-altay.ru_le2.key";
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers 'EECDH+AESGCM:EECDH+CHACHA20:!aNULL:!MD5:!DSS';
     ssl_prefer_server_ciphers on;
@@ -169,7 +169,7 @@ server {
         include /etc/nginx/vhosts-resources/s2.v-altay.ru/dynamic/*.conf;
         fastcgi_index index.php;
         fastcgi_param PHP_ADMIN_VALUE "sendmail_path = /usr/sbin/sendmail -t -i -f webmaster@s2.v-altay.ru";
-        fastcgi_pass unix:/var/www/php-fpm/2.sock;
+        fastcgi_pass unix:/var/www/php-fpm/10.sock;
         fastcgi_split_path_info ^((?U).+\.ph(?:p\d*|tml))(/?.+)$;
         try_files $uri =404;
         include fastcgi_params;
