@@ -78,12 +78,11 @@
    - После настройки убедитесь, что API отвечает на `/api/install/status`.
 
 ## Пример конфигурации Nginx
-Ниже приведён исправленный вариант конфигурации с одинаковым корнем для HTTP/HTTPS, корректным порядком объявления `$root_path` и актуальными настройками TLS.
+Ниже приведён исправленный вариант конфигурации с одинаковым корнем для HTTP/HTTPS, корректным порядком объявления `$root_path` и актуальными настройками TLS. Обратите внимание, что директиву `set` нужно размещать внутри блоков `server` — если файл подключается сразу в основную секцию `nginx.conf`, вынесение `set` в начало файла приведёт к ошибке `"set" directive is not allowed here`.
 
 ```nginx
-set $root_path /var/www/www-root/data/www/s2.v-altay.ru/backend/public;
-
 server {
+    set $root_path /var/www/www-root/data/www/s2.v-altay.ru/backend/public;
     server_name s2.v-altay.ru www.s2.v-altay.ru;
     listen 5.35.126.252:80;
 
@@ -127,6 +126,7 @@ server {
 }
 
 server {
+    set $root_path /var/www/www-root/data/www/s2.v-altay.ru/backend/public;
     server_name s2.v-altay.ru www.s2.v-altay.ru;
     listen 5.35.126.252:443 ssl;
 
